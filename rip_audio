@@ -45,6 +45,8 @@ for file in *; do
 	#
 	# It's a total hack how we scrape from stderr.  But it's a working
 	# hack.
+	#
+	# ffmpeg prints file info when given only input, but returns nonzero.
 	audio_stream="`ffmpeg -i "${filename}.${extension}" 2>&1 | grep -o "Audio:.*" | awk '{print $2}' | sed 's/,//'`" || true
 
 	output_extension=""
