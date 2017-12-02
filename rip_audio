@@ -24,6 +24,7 @@ for file in *; do
 	if [ $debug ]; then
 		echo "Parsing for extension $extension."
 	fi
+	# Define our extensions.  Anything not defined triggers a skip.
 	case $extension in
 		mkv) ;;
 		mp4) ;;
@@ -38,24 +39,29 @@ for file in *; do
 	if [ $debug ]; then
 		echo -n "Finding audio stream for ${file}..."
 	fi
+	# Audio line from stderr looks similar to
+	#
+	# 	Stream #0:0(eng): Audio: opus, 48000 Hz, stereo, fltp
+	#
+	# It's a total hack how we scrape from stderr.  But it's a working
+	# hack.
 	audio_stream="`ffmpeg -i "${filename}.${extension}" 2>&1 | grep -o "Audio:.*" | awk '{print $2}' | sed 's/,//'`" || true
-	#echo "$audio_stream" | grep -o "Audio:.*" | awk '{print $2}'
 
 	output_extension=""
-	#opus, vorbis, aac
+	# Any audio stream type not defined triggers a skip.
 	case $audio_stream in
 		aac) output_extension="aac";;
 		vorbis) output_extension="ogg";;
 		opus) output_extension="opus";;
 		*) echo "No output extension defined for $audio_stream."
-		continue;;
+			continue;;
 	esac
 	if [ $debug ]; then
 		echo "Output extension set to $output_extension."
 	fi
 	echo "Converting $file to $filename.$output_extension"
 	command="ffmpeg -y -i \"$file\" -vn -acodec copy \"$filename.$output_extension\""
-	if true || [ $debug ]; then
+	if [ $debug ]; then
 		echo "$command"
 	fi
 	eval "$command"
