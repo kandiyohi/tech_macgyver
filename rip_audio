@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+# Note to future maintainer who is probably myself.  If nontrivial changes are
+# required, port to a language less funky than bash.  Python probably has
+# ffmpeg libraries.  Otherwise powershell would probably even work.
+
 set -euo pipefail
 
 debug=
