@@ -1,0 +1,58 @@
+#!/usr/bin/bash
+
+set -euo pipefail
+
+debug=
+
+for file in *; do
+	if [ $debug ]; then
+		echo ""
+		echo "Working on $file."
+	fi
+	if ! echo "$file" | grep -q '.'; then
+		echo "$file does not have an extension.  Skipping."
+		continue
+	fi
+	filename="`basename "$file"`"
+	extension="${filename##*.}"
+	filename="${filename%.*}"
+
+	if [ $debug ]; then
+		echo "Parsing for extension $extension."
+	fi
+	case $extension in
+		mkv) ;;
+		mp4) ;;
+		webm) ;;
+		*)
+		if [ $debug ]; then
+			echo "Skipping."
+		fi
+		continue;;
+	esac
+
+	if [ $debug ]; then
+		echo -n "Finding audio stream for ${file}..."
+	fi
+	audio_stream="`ffmpeg -i "${filename}.${extension}" 2>&1 | grep -o "Audio:.*" | awk '{print $2}' | sed 's/,//'`" || true
+	#echo "$audio_stream" | grep -o "Audio:.*" | awk '{print $2}'
+
+	output_extension=""
+	#opus, vorbis, aac
+	case $audio_stream in
+		aac) output_extension="aac";;
+		vorbis) output_extension="ogg";;
+		opus) output_extension="opus";;
+		*) echo "No output extension defined for $audio_stream."
+		continue;;
+	esac
+	if [ $debug ]; then
+		echo "Output extension set to $output_extension."
+	fi
+	echo "Converting $file to $filename.$output_extension"
+	command="ffmpeg -y -i \"$file\" -vn -acodec copy \"$filename.$output_extension\""
+	if true || [ $debug ]; then
+		echo "$command"
+	fi
+	eval "$command"
+done
